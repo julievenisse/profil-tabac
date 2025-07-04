@@ -37,7 +37,7 @@
 const ages = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
 let cigs = new Array(ages.length).fill(0);
 
-const ctx = document.getElementById('myChart').getContext('2d');
+const ctx = document.getElementById('myChart').getContext(' ');
 const chart = new Chart(ctx, {
   type: 'line',
   data: {
@@ -142,44 +142,45 @@ document.getElementById("exportBtn").addEventListener("click", function() {
   URL.revokeObjectURL(url);
 });
 
-// ✅ Envoi via Google Form (pas de CORS)
-document.getElementById("validerProfil").addEventListener("click", function() {
-  const pa = calculerPA().toFixed(2);
-  const ageActuel = parseInt(document.getElementById("ageActuel").value);
-  const dernierAgeFumeur = detectDernierAgeFumeur();
-  const statut = pa == 0 ? "Non-fumeur" : (ageActuel > dernierAgeFumeur ? "Ex-fumeur" : "Fumeur actuel");
+// Envoi Google Form
 
+const champs = {
+  "entry.2037352795": () => document.getElementById("ageActuel").value,
+  "entry.1063040631": () => calculerPA().toFixed(2),
+  "entry.1961823153": () => detectDernierAgeFumeur() || "",
+  "entry.954073223": () => {
+    const pa = calculerPA();
+    const age = parseInt(document.getElementById("ageActuel").value);
+    const stop = detectDernierAgeFumeur();
+    return pa == 0 ? "Non-fumeur" : (age > stop ? "Ex-fumeur" : "Fumeur actuel");
+  },
+  "entry.1052877088": () => cigs[0],
+  "entry.1674761886": () => cigs[1],
+  "entry.1091117996": () => cigs[2],
+  "entry.1393674477": () => cigs[3],
+  "entry.1184785050": () => cigs[4],
+  "entry.1705673496": () => cigs[5],
+  "entry.377735187": () => cigs[6],
+  "entry.860842287": () => cigs[7],
+  "entry.804190490": () => cigs[8],
+  "entry.1918018702": () => cigs[9],
+  "entry.1631586344": () => cigs[10],
+  "entry.2069021040": () => cigs[11],
+  "entry.1257363421": () => cigs[12],
+};
+
+document.getElementById("validerProfil").addEventListener("click", function() {
   const form = document.createElement("form");
   form.action = "https://docs.google.com/forms/d/e/1FAIpQLScGlh5VmazbJTgVJCn0PENdzbLcfrusbBwq0iIczbiDma0q4w/formResponse";
   form.method = "POST";
   form.target = "hidden_iframe";
   form.style.display = "none";
 
-  const champs = {
-    "entry.2037352795": ageActuel,
-    "entry.1063040631": pa,
-    "entry.1961823153": dernierAgeFumeur || "",
-    "entry.954073223": statut,
-    "entry.1052877088": cigs[0],
-    "entry.1674761886": cigs[1],
-    "entry.1091117996": cigs[2],
-    "entry.1393674477": cigs[3],
-    "entry.1184785050": cigs[4],
-    "entry.1705673496": cigs[5],
-    "entry.377735187":  cigs[6],
-    "entry.860842287":  cigs[7],
-    "entry.804190490":  cigs[8],
-    "entry.1918018702": cigs[9],
-    "entry.1631586344": cigs[10],
-    "entry.2069021040": cigs[11],
-    "entry.1257363421": cigs[12]
-  };
-
   for (let id in champs) {
     const input = document.createElement("input");
     input.type = "hidden";
     input.name = id;
-    input.value = champs[id];
+    input.value = champs[id]();
     form.appendChild(input);
   }
 
