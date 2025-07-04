@@ -82,6 +82,7 @@ function updatePA() {
   document.getElementById("paResult").textContent = pa.toFixed(2) + " paquet-années";
   afficherTempsDepuisArret();
   afficherRisqueRCV(pa);
+  envoyerVersGoogleSheets(pa);  // ⬅️ Envoi automatique ici
 }
 
 function detectDernierAgeFumeur() {
@@ -134,6 +135,29 @@ document.getElementById("exportBtn").addEventListener("click", function() {
   a.click();
   URL.revokeObjectURL(url);
 });
+
+// 📡 ENVOI VERS GOOGLE SHEETS
+function envoyerVersGoogleSheets(pa) {
+  const ageActuel = parseInt(document.getElementById("ageActuel").value);
+  const dernierAgeFumeur = detectDernierAgeFumeur();
+  const statut = pa === 0 ? "Non-fumeur" : (ageActuel > dernierAgeFumeur ? "Ex-fumeur" : "Fumeur actuel");
+  const donneesTabac = {
+    paquetAnnee: pa.toFixed(2),
+    ageArret: dernierAgeFumeur || "",
+    statut: statut
+  };
+  ages.forEach((age, i) => {
+    donneesTabac[age] = cigs[i];
+  });
+
+  fetch("https://script.google.com/macros/s/AKfycbxejpsRfrxaQ5Ensn_Ctv3z2RYtcJG9A6aaKSuyUkldhVmTvE9F33RzmCZibEWPmzyh/exec", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(donneesTabac)
+  })
+  .then(response => console.log("✅ Données envoyées !"))
+  .catch(error => console.error("❌ Erreur d'envoi :", error));
+}
 
 updatePA();
 </script>
