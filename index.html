@@ -30,6 +30,8 @@
 </div>
 
 <button id="exportBtn">Télécharger le profil (.csv)</button>
+<button id="validerProfil">Valider mon profil</button>
+<p id="confirmation" style="color: green;"></p>
 
 <script>
 const ages = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
@@ -72,17 +74,21 @@ const chart = new Chart(ctx, {
   }
 });
 
-function updatePA() {
+function calculerPA() {
   let pa = 0;
   for (let i = 0; i < cigs.length - 1; i++) {
     let avg = (cigs[i] + cigs[i + 1]) / 2;
     let duration = ages[i + 1] - ages[i];
     pa += (avg / 20) * duration;
   }
+  return pa;
+}
+
+function updatePA() {
+  let pa = calculerPA();
   document.getElementById("paResult").textContent = pa.toFixed(2) + " paquet-années";
   afficherTempsDepuisArret();
   afficherRisqueRCV(pa);
-  envoyerVersGoogleSheets(pa);  // ⬅️ Envoi automatique ici
 }
 
 function detectDernierAgeFumeur() {
@@ -136,8 +142,8 @@ document.getElementById("exportBtn").addEventListener("click", function() {
   URL.revokeObjectURL(url);
 });
 
-// 📡 ENVOI VERS GOOGLE SHEETS
-function envoyerVersGoogleSheets(pa) {
+document.getElementById("validerProfil").addEventListener("click", function() {
+  const pa = calculerPA();
   const ageActuel = parseInt(document.getElementById("ageActuel").value);
   const dernierAgeFumeur = detectDernierAgeFumeur();
   const statut = pa === 0 ? "Non-fumeur" : (ageActuel > dernierAgeFumeur ? "Ex-fumeur" : "Fumeur actuel");
@@ -155,9 +161,14 @@ function envoyerVersGoogleSheets(pa) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(donneesTabac)
   })
-  .then(response => console.log("✅ Données envoyées !"))
-  .catch(error => console.error("❌ Erreur d'envoi :", error));
-}
+  .then(response => {
+    document.getElementById("confirmation").textContent = "✅ Profil envoyé avec succès !";
+    document.getElementById("validerProfil").disabled = true;
+  })
+  .catch(error => {
+    document.getElementById("confirmation").textContent = "❌ Erreur d’envoi. Veuillez réessayer.";
+  });
+});
 
 updatePA();
 </script>
