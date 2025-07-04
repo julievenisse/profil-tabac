@@ -85,7 +85,7 @@ function calculerPA() {
 }
 
 function updatePA() {
-  let pa = calculerPA();
+  const pa = calculerPA();
   document.getElementById("paResult").textContent = pa.toFixed(2) + " paquet-années";
   afficherTempsDepuisArret();
   afficherRisqueRCV(pa);
@@ -142,32 +142,56 @@ document.getElementById("exportBtn").addEventListener("click", function() {
   URL.revokeObjectURL(url);
 });
 
+// ✅ Envoi via Google Form (pas de CORS)
 document.getElementById("validerProfil").addEventListener("click", function() {
-  const pa = calculerPA();
+  const pa = calculerPA().toFixed(2);
   const ageActuel = parseInt(document.getElementById("ageActuel").value);
   const dernierAgeFumeur = detectDernierAgeFumeur();
-  const statut = pa === 0 ? "Non-fumeur" : (ageActuel > dernierAgeFumeur ? "Ex-fumeur" : "Fumeur actuel");
-  const donneesTabac = {
-    paquetAnnee: pa.toFixed(2),
-    ageArret: dernierAgeFumeur || "",
-    statut: statut
-  };
-  ages.forEach((age, i) => {
-    donneesTabac[age] = cigs[i];
-  });
+  const statut = pa == 0 ? "Non-fumeur" : (ageActuel > dernierAgeFumeur ? "Ex-fumeur" : "Fumeur actuel");
 
-  fetch("https://script.google.com/macros/s/AKfycbyTYBbvA_SQzq5tUpDjw6TTfng1VXcBPD73CIxmP40lhjHoV6HeISXWwAK49Kcqe6WP/exec", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(donneesTabac)
-  })
-  .then(response => {
-    document.getElementById("confirmation").textContent = "✅ Profil envoyé avec succès !";
-    document.getElementById("validerProfil").disabled = true;
-  })
-  .catch(error => {
-    document.getElementById("confirmation").textContent = "❌ Erreur d’envoi. Veuillez réessayer.";
-  });
+  const form = document.createElement("form");
+  form.action = "https://docs.google.com/forms/d/e/1FAIpQLScGlh5VmazbJTgVJCn0PENdzbLcfrusbBwq0iIczbiDma0q4w/formResponse";
+  form.method = "POST";
+  form.target = "hidden_iframe";
+  form.style.display = "none";
+
+  const champs = {
+    "entry.2037352795": ageActuel,
+    "entry.1063040631": pa,
+    "entry.1961823153": dernierAgeFumeur || "",
+    "entry.954073223": statut,
+    "entry.1052877088": cigs[0],
+    "entry.1674761886": cigs[1],
+    "entry.1091117996": cigs[2],
+    "entry.1393674477": cigs[3],
+    "entry.1184785050": cigs[4],
+    "entry.1705673496": cigs[5],
+    "entry.377735187":  cigs[6],
+    "entry.860842287":  cigs[7],
+    "entry.804190490":  cigs[8],
+    "entry.1918018702": cigs[9],
+    "entry.1631586344": cigs[10],
+    "entry.2069021040": cigs[11],
+    "entry.1257363421": cigs[12]
+  };
+
+  for (let id in champs) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = id;
+    input.value = champs[id];
+    form.appendChild(input);
+  }
+
+  const iframe = document.createElement("iframe");
+  iframe.name = "hidden_iframe";
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
+  document.body.appendChild(form);
+
+  form.submit();
+  document.getElementById("confirmation").textContent = "✅ Profil envoyé avec succès !";
+  document.getElementById("validerProfil").disabled = true;
 });
 
 updatePA();
