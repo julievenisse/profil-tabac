@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Profil tabagique - Estimation</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-dragdata@2.0.0"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px; }
+    canvas { max-width: 100%; margin-top: 20px; }
+    .result { margin-top: 15px; }
+    button { margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>Profil tabagique - Trajectoire individuelle</h2>
+
+<label><strong>Votre âge actuel :</strong></label>
+<input type="number" id="ageActuel" min="10" max="100" value="70"><br>
+
+<p>Déplacez les points pour indiquer combien de cigarettes vous fumiez à chaque âge :</p>
+
+<canvas id="myChart"></canvas>
+
+<div class="result">
+  <p><strong>Exposition cumulée :</strong> <span id="paResult">0 paquet-années</span></p>
+  <p id="arret"></p>
+  <p id="riskMessage"></p>
+</div>
+
+<button id="exportBtn">Télécharger le profil (.csv)</button>
+
+<script>
+const ages = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
+let cigs = new Array(ages.length).fill(0);
+
+const ctx = document.getElementById('myChart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ages,
+    datasets: [{
+      label: 'Cigarettes par jour',
+      data: cigs,
+      borderColor: 'steelblue',
+      backgroundColor: 'lightblue',
+      pointRadius: 7,
+      pointHoverRadius: 9,
+      pointBorderColor: 'black',
+      pointBorderWidth: 1.5,
+      tension: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      x: { title: { display: true, text: 'Âge (années)' } },
+      y: { min: 0, max: 40, ticks: { stepSize: 5 }, title: { display: true, text: 'Cigarettes/jour' } }
+    },
+    plugins: {
+      dragData: {
+        round: 1,
+        showTooltip: true,
+        onDragEnd: function(e, datasetIndex, index, value) {
+          cigs[index] = value;
+          updatePA();
+        }
+      },
+      legend: { display: false }
+    }
+  }
+});
+
+function updatePA() {
+  let pa = 0;
+  for (let i = 0; i < cigs.length - 1; i++) {
+    let avg = (cigs[i] + cigs[i + 1]) / 2;
+    let duration = ages[i + 1] - ages[i];
+    pa += (avg / 20) * duration;
+  }
+  document.getElementById("paResult").textContent = pa.toFixed(2) + " paquet-années";
+  afficherTempsDepuisArret();
+  afficherRisqueRCV(pa);
+}
+
+function detectDernierAgeFumeur() {
+  for (let i = cigs.length - 1; i >= 0; i--) {
+    if (cigs[i] > 0) return ages[i];
+  }
+  return null;
+}
+
+function afficherTempsDepuisArret() {
+  const ageActuel = parseInt(document.getElementById("ageActuel").value);
+  const dernierAgeFumeur = detectDernierAgeFumeur();
+  document.getElementById("arret").textContent =
+    (dernierAgeFumeur !== null && ageActuel > dernierAgeFumeur) ?
+    `Arrêt du tabac à ${dernierAgeFumeur} ans. Temps depuis l'arrêt : ${ageActuel - dernierAgeFumeur} ans.` :
+    `Aucun arrêt détecté ou âge incohérent.`;
+}
+
+function afficherRisqueRCV(pa) {
+  const ageActuel = parseInt(document.getElementById("ageActuel").value);
+  const dernierAgeFumeur = detectDernierAgeFumeur();
+  const arretDepuis = (dernierAgeFumeur !== null && ageActuel > dernierAgeFumeur) ? ageActuel - dernierAgeFumeur : 0;
+  const cigsActuelles = cigs[cigs.length - 1];
+  
+  let msg = "";
+  if (pa === 0) msg = "Non-fumeur : risque cardiovasculaire comparable à la population générale.";
+  else if (pa < 5) msg = "Exposition très faible : risque légèrement augmenté dès les premières cigarettes.";
+  else if (pa < 10) msg = "Exposition faible : risque modéré.";
+  else if (pa < 20) msg = "Exposition modérée : risque significatif.";
+  else msg = "Exposition forte (≥ 20 PA) : risque cardiovasculaire élevé.";
+
+  if (arretDepuis >= 15) msg += " Après 15 ans d'arrêt, le risque rejoint presque celui d'un non-fumeur.";
+  else if (arretDepuis >= 5) msg += " Amélioration nette du risque après 5 ans d'arrêt.";
+  else if (arretDepuis >= 1) msg += " Début d'amélioration progressive après un an d'arrêt.";
+
+  if (cigsActuelles >= 15) msg += " Consommation actuelle >15 cig/j : sur-risque immédiat.";
+  document.getElementById("riskMessage").textContent = msg;
+}
+
+document.getElementById("exportBtn").addEventListener("click", function() {
+  let csv = "Âge,Cigarettes/jour\n";
+  for (let i = 0; i < ages.length; i++) {
+    csv += `${ages[i]},${cigs[i]}\n`;
+  }
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "profil_tabagique.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+updatePA();
+</script>
+
+</body>
+</html>
