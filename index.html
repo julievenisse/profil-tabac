@@ -34,168 +34,168 @@
 <p id="confirmation" style="color: green;"></p>
 
 <script>
-const ages = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
-let cigs = new Array(ages.length).fill(0);
+window.onload = function () {
+  const ages = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70];
+  let cigs = new Array(ages.length).fill(0);
 
-const ctx = document.getElementById('myChart').getContext(' ');
-const chart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: ages,
-    datasets: [{
-      label: 'Cigarettes par jour',
-      data: cigs,
-      borderColor: 'steelblue',
-      backgroundColor: 'lightblue',
-      pointRadius: 7,
-      pointHoverRadius: 9,
-      pointBorderColor: 'black',
-      pointBorderWidth: 1.5,
-      tension: 0
-    }]
-  },
-  options: {
-    responsive: true,
-    scales: {
-      x: { title: { display: true, text: 'Âge (années)' } },
-      y: { min: 0, max: 40, ticks: { stepSize: 5 }, title: { display: true, text: 'Cigarettes/jour' } }
+  const ctx = document.getElementById('myChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ages,
+      datasets: [{
+        label: 'Cigarettes par jour',
+        data: cigs,
+        borderColor: 'steelblue',
+        backgroundColor: 'lightblue',
+        pointRadius: 7,
+        pointHoverRadius: 9,
+        pointBorderColor: 'black',
+        pointBorderWidth: 1.5,
+        tension: 0
+      }]
     },
-    plugins: {
-      dragData: {
-        round: 1,
-        showTooltip: true,
-        onDragEnd: function(e, datasetIndex, index, value) {
-          cigs[index] = value;
-          updatePA();
-        }
+    options: {
+      responsive: true,
+      scales: {
+        x: { title: { display: true, text: 'Âge (années)' } },
+        y: { min: 0, max: 40, ticks: { stepSize: 5 }, title: { display: true, text: 'Cigarettes/jour' } }
       },
-      legend: { display: false }
+      plugins: {
+        dragData: {
+          round: 1,
+          showTooltip: true,
+          onDragEnd: function(e, datasetIndex, index, value) {
+            cigs[index] = value;
+            updatePA();
+          }
+        },
+        legend: { display: false }
+      }
     }
+  });
+
+  function calculerPA() {
+    let pa = 0;
+    for (let i = 0; i < cigs.length - 1; i++) {
+      let avg = (cigs[i] + cigs[i + 1]) / 2;
+      let duration = ages[i + 1] - ages[i];
+      pa += (avg / 20) * duration;
+    }
+    return pa;
   }
-});
 
-function calculerPA() {
-  let pa = 0;
-  for (let i = 0; i < cigs.length - 1; i++) {
-    let avg = (cigs[i] + cigs[i + 1]) / 2;
-    let duration = ages[i + 1] - ages[i];
-    pa += (avg / 20) * duration;
-  }
-  return pa;
-}
-
-function updatePA() {
-  const pa = calculerPA();
-  document.getElementById("paResult").textContent = pa.toFixed(2) + " paquet-années";
-  afficherTempsDepuisArret();
-  afficherRisqueRCV(pa);
-}
-
-function detectDernierAgeFumeur() {
-  for (let i = cigs.length - 1; i >= 0; i--) {
-    if (cigs[i] > 0) return ages[i];
-  }
-  return null;
-}
-
-function afficherTempsDepuisArret() {
-  const ageActuel = parseInt(document.getElementById("ageActuel").value);
-  const dernierAgeFumeur = detectDernierAgeFumeur();
-  document.getElementById("arret").textContent =
-    (dernierAgeFumeur !== null && ageActuel > dernierAgeFumeur) ?
-    `Arrêt du tabac à ${dernierAgeFumeur} ans. Temps depuis l'arrêt : ${ageActuel - dernierAgeFumeur} ans.` :
-    `Aucun arrêt détecté ou âge incohérent.`;
-}
-
-function afficherRisqueRCV(pa) {
-  const ageActuel = parseInt(document.getElementById("ageActuel").value);
-  const dernierAgeFumeur = detectDernierAgeFumeur();
-  const arretDepuis = (dernierAgeFumeur !== null && ageActuel > dernierAgeFumeur) ? ageActuel - dernierAgeFumeur : 0;
-  const cigsActuelles = cigs[cigs.length - 1];
-  
-  let msg = "";
-  if (pa === 0) msg = "Non-fumeur : risque cardiovasculaire comparable à la population générale.";
-  else if (pa < 5) msg = "Exposition très faible : risque légèrement augmenté dès les premières cigarettes.";
-  else if (pa < 10) msg = "Exposition faible : risque modéré.";
-  else if (pa < 20) msg = "Exposition modérée : risque significatif.";
-  else msg = "Exposition forte (≥ 20 PA) : risque cardiovasculaire élevé.";
-
-  if (arretDepuis >= 15) msg += " Après 15 ans d'arrêt, le risque rejoint presque celui d'un non-fumeur.";
-  else if (arretDepuis >= 5) msg += " Amélioration nette du risque après 5 ans d'arrêt.";
-  else if (arretDepuis >= 1) msg += " Début d'amélioration progressive après un an d'arrêt.";
-
-  if (cigsActuelles >= 15) msg += " Consommation actuelle >15 cig/j : sur-risque immédiat.";
-  document.getElementById("riskMessage").textContent = msg;
-}
-
-document.getElementById("exportBtn").addEventListener("click", function() {
-  let csv = "Âge,Cigarettes/jour\n";
-  for (let i = 0; i < ages.length; i++) {
-    csv += `${ages[i]},${cigs[i]}\n`;
-  }
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = "profil_tabagique.csv";
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-// Envoi Google Form
-
-const champs = {
-  "entry.2037352795": () => document.getElementById("ageActuel").value,
-  "entry.1063040631": () => calculerPA().toFixed(2),
-  "entry.1961823153": () => detectDernierAgeFumeur() || "",
-  "entry.954073223": () => {
+  function updatePA() {
     const pa = calculerPA();
-    const age = parseInt(document.getElementById("ageActuel").value);
-    const stop = detectDernierAgeFumeur();
-    return pa == 0 ? "Non-fumeur" : (age > stop ? "Ex-fumeur" : "Fumeur actuel");
-  },
-  "entry.1052877088": () => cigs[0],
-  "entry.1674761886": () => cigs[1],
-  "entry.1091117996": () => cigs[2],
-  "entry.1393674477": () => cigs[3],
-  "entry.1184785050": () => cigs[4],
-  "entry.1705673496": () => cigs[5],
-  "entry.377735187": () => cigs[6],
-  "entry.860842287": () => cigs[7],
-  "entry.804190490": () => cigs[8],
-  "entry.1918018702": () => cigs[9],
-  "entry.1631586344": () => cigs[10],
-  "entry.2069021040": () => cigs[11],
-  "entry.1257363421": () => cigs[12],
-};
-
-document.getElementById("validerProfil").addEventListener("click", function() {
-  const form = document.createElement("form");
-  form.action = "https://docs.google.com/forms/d/e/1FAIpQLScGlh5VmazbJTgVJCn0PENdzbLcfrusbBwq0iIczbiDma0q4w/formResponse";
-  form.method = "POST";
-  form.target = "hidden_iframe";
-  form.style.display = "none";
-
-  for (let id in champs) {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = id;
-    input.value = champs[id]();
-    form.appendChild(input);
+    document.getElementById("paResult").textContent = pa.toFixed(2) + " paquet-années";
+    afficherTempsDepuisArret();
+    afficherRisqueRCV(pa);
   }
 
-  const iframe = document.createElement("iframe");
-  iframe.name = "hidden_iframe";
-  iframe.style.display = "none";
-  document.body.appendChild(iframe);
-  document.body.appendChild(form);
+  function detectDernierAgeFumeur() {
+    for (let i = cigs.length - 1; i >= 0; i--) {
+      if (cigs[i] > 0) return ages[i];
+    }
+    return null;
+  }
 
-  form.submit();
-  document.getElementById("confirmation").textContent = "✅ Profil envoyé avec succès !";
-  document.getElementById("validerProfil").disabled = true;
-});
+  function afficherTempsDepuisArret() {
+    const ageActuel = parseInt(document.getElementById("ageActuel").value);
+    const dernierAgeFumeur = detectDernierAgeFumeur();
+    document.getElementById("arret").textContent =
+      (dernierAgeFumeur !== null && ageActuel > dernierAgeFumeur) ?
+      `Arrêt du tabac à ${dernierAgeFumeur} ans. Temps depuis l'arrêt : ${ageActuel - dernierAgeFumeur} ans.` :
+      `Aucun arrêt détecté ou âge incohérent.`;
+  }
 
-updatePA();
+  function afficherRisqueRCV(pa) {
+    const ageActuel = parseInt(document.getElementById("ageActuel").value);
+    const dernierAgeFumeur = detectDernierAgeFumeur();
+    const arretDepuis = (dernierAgeFumeur !== null && ageActuel > dernierAgeFumeur) ? ageActuel - dernierAgeFumeur : 0;
+    const cigsActuelles = cigs[cigs.length - 1];
+
+    let msg = "";
+    if (pa === 0) msg = "Non-fumeur : risque cardiovasculaire comparable à la population générale.";
+    else if (pa < 5) msg = "Exposition très faible : risque légèrement augmenté dès les premières cigarettes.";
+    else if (pa < 10) msg = "Exposition faible : risque modéré.";
+    else if (pa < 20) msg = "Exposition modérée : risque significatif.";
+    else msg = "Exposition forte (≥ 20 PA) : risque cardiovasculaire élevé.";
+
+    if (arretDepuis >= 15) msg += " Après 15 ans d'arrêt, le risque rejoint presque celui d'un non-fumeur.";
+    else if (arretDepuis >= 5) msg += " Amélioration nette du risque après 5 ans d'arrêt.";
+    else if (arretDepuis >= 1) msg += " Début d'amélioration progressive après un an d'arrêt.";
+
+    if (cigsActuelles >= 15) msg += " Consommation actuelle >15 cig/j : sur-risque immédiat.";
+    document.getElementById("riskMessage").textContent = msg;
+  }
+
+  document.getElementById("exportBtn").addEventListener("click", function() {
+    let csv = "Âge,Cigarettes/jour\n";
+    for (let i = 0; i < ages.length; i++) {
+      csv += `${ages[i]},${cigs[i]}\n`;
+    }
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "profil_tabagique.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  const champs = {
+    "entry.2037352795": () => document.getElementById("ageActuel").value,
+    "entry.1063040631": () => calculerPA().toFixed(2),
+    "entry.1961823153": () => detectDernierAgeFumeur() || "",
+    "entry.954073223": () => {
+      const pa = calculerPA();
+      const age = parseInt(document.getElementById("ageActuel").value);
+      const stop = detectDernierAgeFumeur();
+      return pa == 0 ? "Non-fumeur" : (age > stop ? "Ex-fumeur" : "Fumeur actuel");
+    },
+    "entry.1052877088": () => cigs[0],
+    "entry.1674761886": () => cigs[1],
+    "entry.1091117996": () => cigs[2],
+    "entry.1393674477": () => cigs[3],
+    "entry.1184785050": () => cigs[4],
+    "entry.1705673496": () => cigs[5],
+    "entry.377735187": () => cigs[6],
+    "entry.860842287": () => cigs[7],
+    "entry.804190490": () => cigs[8],
+    "entry.1918018702": () => cigs[9],
+    "entry.1631586344": () => cigs[10],
+    "entry.2069021040": () => cigs[11],
+    "entry.1257363421": () => cigs[12],
+  };
+
+  document.getElementById("validerProfil").addEventListener("click", function() {
+    const form = document.createElement("form");
+    form.action = "https://docs.google.com/forms/d/e/1FAIpQLScGlh5VmazbJTgVJCn0PENdzbLcfrusbBwq0iIczbiDma0q4w/formResponse";
+    form.method = "POST";
+    form.target = "hidden_iframe";
+    form.style.display = "none";
+
+    for (let id in champs) {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = id;
+      input.value = champs[id]();
+      form.appendChild(input);
+    }
+
+    const iframe = document.createElement("iframe");
+    iframe.name = "hidden_iframe";
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+    document.body.appendChild(form);
+
+    form.submit();
+    document.getElementById("confirmation").textContent = "✅ Profil envoyé avec succès !";
+    document.getElementById("validerProfil").disabled = true;
+  });
+
+  updatePA();
+};
 </script>
 
 </body>
