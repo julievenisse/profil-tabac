@@ -144,33 +144,33 @@ window.onload = function () {
   });
 
   const champs = {
-    "entry.2037352795": () => document.getElementById("ageActuel").value,
-    "entry.1063040631": () => calculerPA().toFixed(2),
-    "entry.1961823153": () => detectDernierAgeFumeur() || "",
-    "entry.954073223": () => {
+    "entry.2029402425": () => document.getElementById("ageActuel").value,
+    "entry.1686467018": () => calculerPA().toFixed(2),
+    "entry.1165569740": () => detectDernierAgeFumeur() || "",
+    "entry.1394020213": () => {
       const pa = calculerPA();
       const age = parseInt(document.getElementById("ageActuel").value);
       const stop = detectDernierAgeFumeur();
       return pa == 0 ? "Non-fumeur" : (age > stop ? "Ex-fumeur" : "Fumeur actuel");
     },
-    "entry.1052877088": () => cigs[0],
-    "entry.1674761886": () => cigs[1],
-    "entry.1091117996": () => cigs[2],
-    "entry.1393674477": () => cigs[3],
-    "entry.1184785050": () => cigs[4],
-    "entry.1705673496": () => cigs[5],
-    "entry.377735187": () => cigs[6],
-    "entry.860842287": () => cigs[7],
-    "entry.804190490": () => cigs[8],
-    "entry.1918018702": () => cigs[9],
-    "entry.1631586344": () => cigs[10],
-    "entry.2069021040": () => cigs[11],
-    "entry.1257363421": () => cigs[12],
+    "entry.900768953": () => cigs[0],
+    "entry.1738512141": () => cigs[1],
+    "entry.1398510304": () => cigs[2],
+    "entry.1103476084": () => cigs[3],
+    "entry.934030550": () => cigs[4],
+    "entry.1213987903": () => cigs[5],
+    "entry.976740802": () => cigs[6],
+    "entry.872836481": () => cigs[7],
+    "entry.100275430": () => cigs[8],
+    "entry.1993660655": () => cigs[9],
+    "entry.1937338127": () => cigs[10],
+    "entry.1849252766": () => cigs[11],
+    // tu peux ajouter cigs[12] ici si tu ajoutes une entrée pour l'âge 70
   };
 
   document.getElementById("validerProfil").addEventListener("click", function() {
     const form = document.createElement("form");
-    form.action = "https://docs.google.com/forms/d/e/1LVrx5ccDJnTy16EevbYpbO4wBYenNRe2FlQYQ2PZH0A/formResponse";
+    form.action = "https://docs.google.com/forms/d/e/1FAIpQLScGlh5VmazbJTgVJCn0PENdzbLcfrusbBwq0iIczbiDma0q4w/formResponse";
     form.method = "POST";
     form.target = "hidden_iframe";
     form.style.display = "none";
